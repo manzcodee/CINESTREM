@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineStream - Vinland Saga Streaming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#25D366', // WhatsApp Green (Keep for contact)
+                            600: '#128C7E',
+                            red: '#3b82f6', // CHANGED: Replaced Red with Blue (#3b82f6) for the new theme
+                            dark: '#141414',
+                            gray: '#2f2f2f'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'zoom-in': 'zoomIn 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        zoomIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141414;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hidden-page {
+            display: none;
+        }
+        
+        /* Floating Button Animation */
+        .float-btn {
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+        }
+
+        /* Hotbar Gradient - Updated to Blue */
+        .hotbar-gradient {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 50%, rgba(37,211,102,0.1) 100%);
+            border-top: 1px solid #222;
+            border-bottom: 1px solid #222;
+        }
+
+        /* Hero Image Transition */
+        #heroBgImage {
+            transition: opacity 1s ease-in-out;
+        }
+        .fade-out {
+            opacity: 0;
+        }
+
+        /* In-App Browser Styles */
+        .browser-frame {
+            height: calc(100vh - 60px); /* Height minus header */
+            width: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen relative">
+
+    <!-- LOGIN / REGISTER PAGE -->
+    <section id="loginPage" class="fixed inset-0 z-50 flex items-center justify-center bg-[url('https://i.ibb.co.com/dwGFyFFD/jembatan.webp')] bg-cover bg-center">
+        <div class="absolute inset-0 bg-black/80"></div>
+        
+        <div class="relative z-10 w-full max-w-md p-8 rounded-2xl glass-panel animate-slide-up shadow-2xl mx-4 border border-gray-800">
+            <div class="text-center mb-6">
+                <h1 class="text-4xl font-bold text-brand-red mb-2 tracking-tighter">CINESTREAM</h1>
+                <p class="text-gray-400 text-sm">Lengkapi profil untuk menonton</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <!-- Profile Photo Upload -->
+                <div class="flex flex-col items-center justify-center">
+                    <div class="relative group cursor-pointer w-24 h-24 rounded-full border-2 border-dashed border-gray-600 hover:border-brand-red transition-colors overflow-hidden flex items-center justify-center bg-gray-900">
+                        <img id="avatarPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <div class="text-center p-2" id="uploadPlaceholder">
+                            <i class="fas fa-camera text-gray-500 text-xl mb-1 group-hover:text-brand-red"></i>
+                            <p class="text-[9px] text-gray-500 leading-tight">Upload Foto</p>
+                        </div>
+                        <input type="file" id="avatarInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="previewAvatar(this)">
+                    </div>
+                </div>
+
+                <!-- Username Input -->
+                <div class="relative">
+                    <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                    <input type="text" id="username" required placeholder="Nama Pengguna" 
+                        class="w-full bg-gray-900/50 border border-gray-700 text-white rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all placeholder-gray-500">
+                </div>
+
+                <button type="submit" class="w-full bg-brand-red hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg flex justify-center items-center gap-2">
+                    <span>Masuk Aplikasi</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- MAIN APP DASHBOARD (Hidden initially) -->
+    <div id="mainApp" class="hidden-page min-h-screen pb-20 relative">
+        
+        <!-- Navbar -->
+        <nav class="fixed top-0 w-full z-40 glass-panel transition-all duration-300" id="navbar">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 cursor-pointer" onclick="resetView()">
+                            <span class="text-2xl font-bold text-brand-red tracking-tighter">CINESTREAM</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Search & User -->
+                    <div class="flex items-center gap-3 md:gap-4">
+                        <!-- Search -->
+                        <div class="relative hidden sm:block">
+                            <input type="text" id="searchInput" placeholder="Cari judul..." onkeyup="searchMovies()"
+                                class="bg-gray-800/80 border border-gray-700 text-gray-300 text-sm rounded-full focus:ring-brand-red focus:border-brand-red block w-32 sm:w-64 pl-4 pr-8 py-2 transition-all focus:w-40 sm:focus:w-72">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-search text-gray-500"></i>
+                            </div>
+                        </div>
+
+                        <!-- Request Button Desktop -->
+                        <a href="https://wa.me/6282254388144?text=Halo%20Admin%20CineStream,%20saya%20mau%20request%20film..." target="_blank" 
+                           class="hidden md:flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors shadow-lg">
+                            <i class="fab fa-whatsapp text-lg"></i> Request
+                        </a>
+
+                        <!-- User Profile -->
+                        <div class="flex items-center gap-3 pl-2 sm:pl-4 border-l border-gray-700">
+                            <div class="text-right hidden sm:block">
+                                <p id="displayUsername" class="text-sm font-medium text-white"></p>
+                            </div>
+                            <!-- User Avatar Container -->
+                            <div class="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-white border border-gray-600 overflow-hidden shadow-sm" id="userInitial">
+                                <!-- Image or Initial will go here -->
+                                U
+                            </div>
+                            <button onclick="logout()" class="text-gray-400 hover:text-white transition-colors ml-1" title="Keluar">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dynamic Hero Section -->
+        <header class="relative h-[65vh] md:h-[75vh] w-full overflow-hidden mt-16 group">
+            <div class="absolute inset-0 transition-all duration-700">
+                <!-- Dynamic Hero Image -->
+                <img id="heroBgImage" src="" class="w-full h-full object-cover opacity-60 transition-transform duration-[10000ms] ease-linear scale-100 group-hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#000] via-black/40 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent"></div>
+            </div>
+            
+            <div class="relative max-w-7xl mx-auto px-4 h-full flex items-end pb-16">
+                <div class="max-w-3xl animate-slide-up relative z-10 pl-2">
+                    <div class="flex items-center gap-2 mb-3">
+                         <span class="inline-block px-3 py-1 bg-brand-red text-white text-xs font-bold rounded-sm">TOP PICK</span>
+                         <span id="heroYear" class="inline-block px-2 py-1 border border-white/30 text-white text-xs font-semibold rounded-sm">2024</span>
+                    </div>
+                   
+                    <h1 id="heroTitle" class="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight drop-shadow-lg uppercase transition-all duration-500">
+                        Loading...
+                    </h1>
+                    <p id="heroGenre" class="text-brand-red font-semibold mb-2 text-lg"></p>
+                    <p class="text-gray-200 text-sm md:text-lg mb-8 drop-shadow-md max-w-xl line-clamp-3">
+                        Saksikan film terbaik pilihan CineStream. Nikmati kualitas gambar HD dan audio jernih. Klik tombol putar untuk mulai menonton.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4">
+                        <button id="heroPlayBtn" onclick="" class="bg-white text-black px-8 py-3.5 rounded font-bold hover:bg-gray-200 transition-colors flex items-center gap-3 transform hover:scale-105 duration-200">
+                            <i class="fas fa-play text-xl"></i> PUTAR FILM
+                        </button>
+                        <button id="heroInfoBtn" onclick="" class="bg-gray-500/40 backdrop-blur text-white px-6 py-3.5 rounded font-bold hover:bg-gray-500/60 transition-colors flex items-center gap-2 border border-white/20">
+                            <i class="fas fa-info-circle"></i> Detail
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hero Slide Indicators -->
+            <div class="absolute bottom-6 right-6 flex gap-2 z-20" id="heroIndicators">
+                <!-- Dots generated by JS -->
+            </div>
+        </header>
+
+        <!-- HOTBAR / STATS BAR -->
+        <div class="hotbar-gradient w-full py-4 relative z-20">
+            <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Server Status -->
+                <div class="flex items-center gap-3 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-red"></span>
+                        </span>
+                        <span class="text-gray-300">Server Status: <span class="text-brand-red font-bold">Online</span></span>
+                    </div>
+                </div>
+
+                <!-- Total Movies Counter -->
+                <div class="flex items-center gap-3 bg-gray-900/80 border border-gray-700 rounded-full px-5 py-2 shadow-lg transform hover:scale-105 transition-transform cursor-default">
+                    <div class="p-1.5 bg-brand-red rounded-full">
+                        <i class="fas fa-video text-white text-xs"></i>
+                    </div>
+                    <div class="flex flex-col leading-none">
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Total Film</span>
+                        <span id="totalMoviesCounter" class="text-lg font-bold text-white">0</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <main class="max-w-7xl mx-auto px-4 py-8" id="contentSection">
+            
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="categoryTitle" class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand-red pl-3">Daftar Tontonan</h2>
+                <!-- Mobile Search -->
+                <div class="sm:hidden relative">
+                    <input type="text" placeholder="Cari..." onkeyup="searchMovies()" id="mobileSearch"
+                        class="bg-gray-800 border border-gray-700 text-xs rounded-full py-1.5 px-3 w-32 focus:ring-1 focus:ring-brand-red text-white">
+                </div>
+            </div>
+
+            <!-- Movie Grid -->
+            <div id="movieGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 min-h-[200px]">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-12 px-4 bg-gray-900/50 rounded-xl border border-gray-800 border-dashed mt-4">
+                <i class="fas fa-search text-6xl text-gray-700 mb-4 block"></i>
+                <h3 class="text-xl md:text-2xl font-bold text-gray-300 mb-2">Film tidak ditemukan</h3>
+                <p class="text-gray-500 mb-6 max-w-md mx-auto">Coba kata kunci lain atau request film tersebut ke admin.</p>
+                
+                <a href="https://wa.me/6282254388144?text=Halo%20Admin,%20saya%20mencari%20film..." target="_blank"
+                   class="inline-flex items-center gap-2 text-brand-500 hover:text-brand-600 font-semibold border border-brand-500/30 hover:border-brand-500 px-6 py-3 rounded-lg transition-all bg-brand-500/5 hover:bg-brand-500/10">
+                    <i class="fab fa-whatsapp"></i> Hubungi Admin
+                </a>
+            </div>
+        </main>
+
+        <!-- Floating Action Button for Mobile -->
+        <a href="https://wa.me/6282254388144?text=Halo%20Admin%20CineStream,%20saya%20mau%20request%20film..." target="_blank"
+           class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-brand-500 rounded-full flex items-center justify-center text-white shadow-2xl z-50 hover:scale-110 transition-transform float-btn animate-bounce-slow">
+            <i class="fab fa-whatsapp text-3xl"></i>
+        </a>
+    </div>
+
+    <!-- FULL SCREEN BROWSER / VIDEO PLAYER -->
+    <div id="videoPlayerOverlay" class="fixed inset-0 z-[100] bg-black hidden flex-col animate-fade-in">
+        
+        <!-- Browser Header / Navigation Bar -->
+        <div class="h-[60px] bg-[#1a1a1a] flex items-center justify-between px-4 border-b border-gray-800 shadow-xl z-20">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center">
+                    <i class="fas fa-play text-white text-xs"></i>
+                </div>
+                <div class="flex flex-col">
+                    <h3 class="text-white font-bold text-sm md:text-base truncate max-w-[200px] md:max-w-md" id="playerTitle">Judul Film</h3>
+                    <span class="text-xs text-brand-red flex items-center gap-1"><i class="fas fa-lock text-[10px]"></i> Secure Browser</span>
+                </div>
+            </div>
+
+            <!-- EXIT BUTTON -->
+            <button onclick="closePlayer()" class="bg-gray-800 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2 text-sm font-medium border border-gray-700">
+                <i class="fas fa-arrow-left"></i>
+                <span>Kembali</span>
+            </button>
+        </div>
+
+        <!-- Full Screen Iframe Container -->
+        <div class="flex-1 relative bg-black w-full h-full">
+            <iframe id="movieIframe" class="browser-frame w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture; forms; scripts; same-origin"></iframe>
+            
+            <!-- Loader behind iframe -->
+            <div class="absolute inset-0 -z-10 flex flex-col items-center justify-center text-gray-600 bg-gray-950">
+                <i class="fas fa-circle-notch fa-spin text-4xl mb-4 text-brand-red"></i>
+                <span class="text-sm font-mono animate-pulse">Menghubungkan ke situs...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULL SCREEN IMAGE VIEWER -->
+    <div id="imageViewerOverlay" class="fixed inset-0 z-[70] bg-black/95 backdrop-blur-sm hidden items-center justify-center animate-zoom-in">
+        <button onclick="closeImageViewer()" class="absolute top-4 right-4 z-50 text-white hover:text-brand-red transition-colors bg-black/50 rounded-full p-2 w-10 h-10 flex items-center justify-center border border-white/20">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+
+        <div class="relative w-full h-full p-4 flex items-center justify-center">
+            <img id="fullScreenImage" src="" alt="Full Screen Cover" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-gray-800">
+        </div>
+    </div>
+
+    <script>
+        // --- DATA FILM ---
+        const movies = [
+            { 
+                id: 1, 
+                title: "JEMBATAN SHIRATAL MUSTAQIM", 
+                year: "2024", 
+                genre: "Drama, Religi", 
+                image: "https://i.ibb.co.com/dwGFyFFD/jembatan.webp",
+                videoUrl: "https://www.bilibili.tv/id/video/4798579690182656?bstar_from=bstar-web.homepage.recommend.all"
+            },
+            { 
+                id: 2, 
+                title: "Vinland Saga", 
+                year: "2019", 
+                genre: "Anime, Action", 
+                image: "https://i.ibb.co.com/nNWXScpQ/Vinland-Saga.jpg",
+                // Updated to use the embed format of the requested ID (7439188) so it plays inside the app frame
+                videoUrl: "https://www.vidio.com/embed/7439188" 
+            },
+            {
+                id: 3,
+                title: "Cyberpunk: Edgerunners",
+                year: "2022",
+                genre: "Sci-Fi, Anime",
+                image: "https://images.alphacoders.com/125/1258693.jpg",
+                videoUrl: "https://www.youtube.com/embed/JtqvF_8a1D0"
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentUser = null;
+        let currentHeroIndex = 0;
+        let heroInterval;
+
+        // --- AUTHENTICATION & PROFILE ---
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('avatarPreview');
+                    const placeholder = document.getElementById('uploadPlaceholder');
+                    
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const avatarSrc = document.getElementById('avatarPreview').src;
+            const hasAvatar = !document.getElementById('avatarPreview').classList.contains('hidden');
+            
+            currentUser = { 
+                name: username,
+                avatar: hasAvatar ? avatarSrc : null
+            };
+
+            // Update UI - Navbar Profile
+            document.getElementById('displayUsername').innerText = currentUser.name;
+            const userInitialDiv = document.getElementById('userInitial');
+            
+            if (currentUser.avatar) {
+                userInitialDiv.innerHTML = `<img src="${currentUser.avatar}" class="w-full h-full object-cover">`;
+                userInitialDiv.classList.remove('p-1'); // Remove padding if image exists
+            } else {
+                userInitialDiv.innerText = currentUser.name.charAt(0).toUpperCase();
+            }
+
+            // Transition Animation
+            const loginPage = document.getElementById('loginPage');
+            loginPage.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+            
+            setTimeout(() => {
+                loginPage.classList.add('hidden');
+                const mainApp = document.getElementById('mainApp');
+                mainApp.classList.remove('hidden-page');
+                mainApp.classList.add('animate-fade-in');
+                
+                // Initialize Data
+                renderMovies(movies);
+                updateStats();
+                initHeroSlider(); // Start the hero slideshow
+            }, 500);
+        });
+
+        function logout() {
+            location.reload(); 
+        }
+
+        // --- HERO SLIDER LOGIC ---
+        function initHeroSlider() {
+            updateHero(0); // Initial load
+            
+            // Create indicators
+            const indicatorContainer = document.getElementById('heroIndicators');
+            indicatorContainer.innerHTML = '';
+            movies.forEach((_, idx) => {
+                const dot = document.createElement('button');
+                dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${idx === 0 ? 'bg-brand-red w-6' : 'bg-white/50 hover:bg-white'}`;
+                dot.onclick = () => {
+                    clearInterval(heroInterval);
+                    updateHero(idx);
+                    startHeroInterval();
+                };
+                indicatorContainer.appendChild(dot);
+            });
+
+            startHeroInterval();
+        }
+
+        function startHeroInterval() {
+            heroInterval = setInterval(() => {
+                let nextIndex = (currentHeroIndex + 1) % movies.length;
+                updateHero(nextIndex);
+            }, 5000); // Change every 5 seconds
+        }
+
+        function updateHero(index) {
+            currentHeroIndex = index;
+            const movie = movies[index];
+            
+            const bgImage = document.getElementById('heroBgImage');
+            const title = document.getElementById('heroTitle');
+            const genre = document.getElementById('heroGenre');
+            const year = document.getElementById('heroYear');
+            
+            // Fade out effect
+            bgImage.style.opacity = '0.2';
+            
+            setTimeout(() => {
+                // Update Content
+                bgImage.src = movie.image;
+                title.innerText = movie.title;
+                genre.innerText = movie.genre;
+                year.innerText = movie.year;
+                
+                // Update Buttons
+                document.getElementById('heroPlayBtn').onclick = () => openPlayer(movie);
+                document.getElementById('heroInfoBtn').onclick = () => openImageViewer(movie.image);
+                
+                // Update Indicators
+                const dots = document.getElementById('heroIndicators').children;
+                for(let i=0; i<dots.length; i++) {
+                    dots[i].className = `w-2 h-2 rounded-full transition-all duration-300 ${i === index ? 'bg-brand-red w-6' : 'bg-white/50 hover:bg-white'}`;
+                }
+
+                // Fade in
+                bgImage.style.opacity = '0.6';
+            }, 300); // Wait for fade out
+        }
+
+        // --- MOVIE LOGIC ---
+        function renderMovies(movieList) {
+            const grid = document.getElementById('movieGrid');
+            const emptyState = document.getElementById('emptyState');
+            grid.innerHTML = '';
+
+            if (movieList.length === 0) {
+                emptyState.classList.remove('hidden');
+                grid.classList.add('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+                grid.classList.remove('hidden');
+            }
+
+            movieList.forEach((movie) => {
+                const card = document.createElement('div');
+                card.className = `movie-card relative bg-gray-900 rounded-lg overflow-hidden shadow-lg cursor-pointer group animate-fade-in hover:shadow-brand-red/20 hover:shadow-xl transition-all duration-300`;
+                
+                card.innerHTML = `
+                    <div class="aspect-[2/3] overflow-hidden bg-gray-800 relative">
+                        <img src="${movie.image}" alt="${movie.title}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                        
+                        <!-- Hover Overlay -->
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 gap-3">
+                            <button onclick="openPlayer(movies.find(m => m.id === ${movie.id}))" class="transform scale-0 group-hover:scale-100 transition-transform duration-300 bg-brand-red text-white rounded-full p-4 hover:bg-blue-700 shadow-lg">
+                                <i class="fas fa-play text-xl ml-1"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); openImageViewer('${movie.image}')" class="transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-75 bg-gray-700 text-white rounded-full p-3 hover:bg-gray-600 shadow-lg text-sm" title="Lihat Sampul">
+                                <i class="fas fa-image"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="absolute top-2 right-2 bg-brand-red text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-md">HD</div>
+                    </div>
+                    <div class="p-3" onclick="openPlayer(movies.find(m => m.id === ${movie.id}))">
+                        <h3 class="text-white text-sm font-bold truncate group-hover:text-brand-red transition-colors">${movie.title}</h3>
+                        <div class="flex justify-between items-center mt-1">
+                            <p class="text-gray-500 text-xs truncate w-2/3">${movie.genre}</p>
+                            <span class="text-gray-400 text-xs border border-gray-700 px-1 rounded">${movie.year}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalMoviesCounter').innerText = movies.length;
+        }
+
+        function searchMovies() {
+            const queryDesktop = document.getElementById('searchInput').value.toLowerCase();
+            const queryMobile = document.getElementById('mobileSearch').value.toLowerCase();
+            const query = queryDesktop || queryMobile;
+
+            const filtered = movies.filter(m => m.title.toLowerCase().includes(query) || m.genre.toLowerCase().includes(query));
+            
+            renderMovies(filtered);
+            
+            if(query !== "") {
+                document.getElementById('categoryTitle').innerText = `Hasil Pencarian: "${query}"`;
+            } else {
+                document.getElementById('categoryTitle').innerText = 'Daftar Tontonan';
+            }
+        }
+
+        // --- IMAGE VIEWER LOGIC ---
+        function openImageViewer(imageUrl) {
+            const overlay = document.getElementById('imageViewerOverlay');
+            const img = document.getElementById('fullScreenImage');
+            
+            img.src = imageUrl;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageViewer() {
+            const overlay = document.getElementById('imageViewerOverlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.getElementById('imageViewerOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeImageViewer();
+        });
+
+        // --- PLAYER LOGIC (IN-APP BROWSER) ---
+        function openPlayer(movie) {
+            const overlay = document.getElementById('videoPlayerOverlay');
+            const iframe = document.getElementById('movieIframe');
+
+            document.getElementById('playerTitle').innerText = movie.title;
+            // Set the Source to the "Original Web"
+            iframe.src = movie.videoUrl;
+            
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            // Hide scrollbar on main body to prevent scrolling background
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePlayer() {
+            const overlay = document.getElementById('videoPlayerOverlay');
+            const iframe = document.getElementById('movieIframe');
+            
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            // Clear source to stop audio/video
+            iframe.src = '';
+            // Restore scrollbar
+            document.body.style.overflow = 'auto';
+        }
+
+        function resetView() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('mobileSearch').value = '';
+            document.getElementById('categoryTitle').innerText = 'Daftar Tontonan';
+            renderMovies(movies);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-md', 'bg-black/95');
+            } else {
+                nav.classList.remove('shadow-md', 'bg-black/95');
+            }
+        });
+    </script>
+</body>
+</html>
